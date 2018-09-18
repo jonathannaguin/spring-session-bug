@@ -1,0 +1,41 @@
+
+buildscript {
+    ext {
+        releaseBuild = version.endsWith('RELEASE')
+        snapshotBuild = version.endsWith('SNAPSHOT')
+        milestoneBuild = !(releaseBuild || snapshotBuild)
+
+        springBootVersion = '2.1.0.M3'
+    }
+
+    repositories {
+        gradlePluginPortal()
+        maven { url 'https://repo.spring.io/plugins-release/' }
+        maven { url 'https://repo.spring.io/plugins-snapshot/' }
+    }
+
+    dependencies {
+        classpath 'io.spring.gradle:spring-build-conventions:0.0.19.BUILD-SNAPSHOT'
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+    }
+}
+
+apply plugin: 'io.spring.convention.root'
+
+group 'spring-session'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'io.spring.convention.spring-sample-boot'
+
+dependencies {
+    compile "org.springframework.session:spring-session-data-redis:2.0.6.RELEASE"
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-thymeleaf"
+    compile "org.springframework.boot:spring-boot-starter-security"
+    compile "org.springframework.boot:spring-boot-starter-data-redis"
+    compile "org.springframework.boot:spring-boot-devtools"
+    compile "nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect"
+    compile "org.webjars:webjars-locator-core"
+
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+}
