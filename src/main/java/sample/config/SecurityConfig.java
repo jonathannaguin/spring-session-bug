@@ -16,6 +16,7 @@
 
 package sample.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 
 /**
  * Spring Security configuration.
@@ -36,14 +40,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter
 {
-	@Override
-	public void configure(WebSecurity web)
-	{
-		web.ignoring()
-		   .antMatchers("/expired");
-	}
+    private FindByIndexNameSessionRepository<? extends Session> sessionRepository;
 
-	// @formatter:off
+    @Override
+    public void configure(WebSecurity web)
+    {
+        web.ignoring()
+           .antMatchers("/expired");
+    }
+
+    // @formatter:off
 	// tag::config[]
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
@@ -59,26 +65,38 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
 			.and()
 				.csrf().disable();
 
-		http.sessionManagement().invalidSessionUrl("/expired");
+		http.sessionManagement().maximumSessions(2).and().invalidSessionUrl("/expired");
 	}
 	// end::config[]
 	// @formatter:on
 
-	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception
-	{
-		PasswordEncoder encoder = passwordEncoder();
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception
+    {
+        PasswordEncoder encoder = passwordEncoder();
 
-		auth.inMemoryAuthentication()
-			.withUser("user")
-			.password(encoder.encode("password"))
-			.roles("USER")
-			.authorities(new SimpleGrantedAuthority("SOMETHING"));
-	}
+        auth.inMemoryAuthentication()
+            .withUser("user")
+            .password(encoder.encode("password"))
+            .roles("USER")
+            .authorities(new SimpleGrantedAuthority("SOMETHING"));
+    }
 
-	@Bean
-	public PasswordEncoder passwordEncoder()
-	{
-		return new BCryptPasswordEncoder();
-	}
+    @Autowired
+    public void setSessionRepository(FindByIndexNameSessionRepository<? extends Session> sessionRepository)
+    {
+        this.sessionRepository = sessionRepository;
+    }
+
+    @Bean
+    public SpringSessionBackedSessionRegistry sessionRegistry()
+    {
+        return new SpringSessionBackedSessionRegistry<>(this.sessionRepository);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder()
+    {
+        return new BCryptPasswordEncoder();
+    }
 }
