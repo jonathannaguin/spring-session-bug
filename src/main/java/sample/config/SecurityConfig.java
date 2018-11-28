@@ -65,7 +65,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
 			.and()
 				.csrf().disable();
 
-		http.sessionManagement().maximumSessions(2).and().invalidSessionUrl("/expired");
+		http.sessionManagement().maximumSessions(2).sessionRegistry(sessionRegistry())
+            .and()
+            .invalidSessionUrl("/expired");
 	}
 	// end::config[]
 	// @formatter:on
